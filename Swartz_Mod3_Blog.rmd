@@ -1,0 +1,220 @@
+---
+output:
+  word_document: default
+  html_document: default
+---
+# Mod 3 - Shot Chart Blog
+## Keith Swartz
+
+```{r include=FALSE}
+library(devtools)
+devtools::install_github("abresler/nbastatR")
+library(nbastatR)
+library(tidyverse)
+```
+
+```{r include=FALSE}
+shots =teams_shots(teams =c("Los Angeles Lakers","Portland"), seasons = 2019)
+shots =teams_shots(teams =c("Los Angeles Lakers","Golden State Warriors"), seasons = 2019)
+shotsRP=teams_shots(teams =c("Houston Rockets","Portland Trail Blazers"), seasons = 2019)
+shotsRP=shotsRP%>% filter(zoneRange!="Less Than 8 ft.")
+shots1 = shots%>% filter(zoneRange!="Less Than 8 ft.")
+Lakers= shots1 %>% filter(nameTeam=="Los Angeles Lakers")
+Warriors=shots1 %>% filter(nameTeam=="Golden State Warriors")
+Rockets=shotsRP %>% filter(nameTeam=="Houston Rockets")
+Blazers=shotsRP %>% filter(nameTeam=="Portland Trail Blazers")
+
+Lebron=Lakers%>% filter(namePlayer=="LeBron James")
+Steph=Warriors%>% filter(namePlayer=="Stephen Curry")
+Harden= Rockets%>% filter(namePlayer=="James Harden")
+Dame= Blazers%>% filter(namePlayer=="Damian Lillard")
+```
+
+```{r include=FALSE}
+source("https://raw.githubusercontent.com/stephenhillphd/ballr/master/plot_court.R")
+source("https://raw.githubusercontent.com/stephenhillphd/ballr/master/court_themes.R")
+plot_court()
+court_points = court_points%>% mutate_if(is.numeric,~.*10)
+
+ggplot(Lakers,aes(x=locationX,y=locationY+45))+
+  geom_point()+
+  coord_equal()+
+  geom_path(data = court_points,aes(x = x, y = y, group = desc),color = "black")+
+  xlim(-250,250)+ ylim(0,400)+ 
+  theme_minimal()+
+  facet_grid(cols = vars(typeEvent))
+```
+
+```{r include=FALSE}
+ggplot(shots,aes(x=locationX,y=locationY+45))+
+  stat_density_2d(aes(fill = ..density..), geom = "raster", contour = FALSE)+
+  coord_equal()+
+  geom_path(data = court_points,aes(x = x, y = y, group = desc),color = "black")+
+  xlim(-250,250)+ ylim(0,400)+ theme_minimal()
+```
+
+```{r include=FALSE}
+shots1 = shots%>% filter(zoneRange!="Less Than 8 ft.")
+
+ggplot(shots1,aes(x=locationX,y=locationY+45))+
+  stat_density_2d(aes(fill = ..density..), geom = "raster", contour = FALSE)+
+  scale_fill_distiller(palette=4, direction=-1)+
+  coord_equal()+
+  geom_path(data = court_points,aes(x = x, y = y, group = desc),color = "black")+
+  xlim(-250,250)+ ylim(0,400)+ theme_minimal()+
+  theme(legend.position = "none")+
+  theme(axis.ticks = element_blank(), axis.text.y = element_blank())+
+  theme(axis.ticks = element_blank(), axis.text.x = element_blank())
+ 
+
+```
+
+One of the most interesting visuals used in basketball is the shot chart. The shot chart does a great job of identifying where individuals and teams are looking to shoot from. This is vital information for teams to look at when devising defensive schemes for a singular player, or an overall team strategy.  A great example of this is when teams choose to double Los Angeles Lakers superstar Anthony Davis. If you watch him closely, you will see he gets the ball on the perimeter, high post, short-corner, and in the block due to his versatility as an offensive threat. But, opposing teams will only double him when he is close to the block with his back to the basket. Opposing teams do this because that is where Anthony Davis is most effective and if they can force Davis to become a facilitator in those situations, the Lakers have to rely on 3-point shooting, which is not where their bread is buttered. Obviously, these schemes are not entirely devised from shot charts and they couple this information with tons of film and player tendency ratios. So what I want to play around with in this blog is how I would go about defending some of the most prolific offensive teams and players in the NBA. 
+
+I am looking at data from the 2018-2019 NBA season so I chose to look at the Houston Rockets, Golden State Warriors, Los Angeles Lakers, and Portland Trail Blazers as the teams I want to scheme for defensively because all four have at least 1 generational talent coupled with a proven offensive identity. 
+
+I am going to take my first crack at gameplaning against the Los Angeles Lakers. First, let's take a look at the prominent players that make up their roster. Obviously, they have LeBron James, who will be the focal point of any defensive strategy that a team employs against the Lakers, but they have a multitude of young perimeter talent, like Lonzo Ball, Brandon Ingram, Josh Hart, and Kyle Kuzma. They surround their core pieces with veteran leadership at the guard and center position with Rajon Rondo, Kentavious Caldwell-Pope and Javale McGee. This Laker's roster is very young and athletic making it imperative to keep them out of the paint, forcing their inconsistent shooters to make shots.
+
+The first shot chart that I want to look at is Lebron James's because the offense runs primarily through him. I want to identify where he shots the ball from most efficiently to determine when we should double team him and then we will look at the Laker's as a whole, to determine at what spots the doubling player will come from.
+
+In all of my charts, I took out shots within 8 feet of the rim because teams shoot so many more shots at the rim, that it takes away from the findings that the chart produces. 
+
+```{r}
+ggplot(Lebron,aes(x=locationX,y=locationY+45))+
+  stat_density_2d(aes(fill = ..density..), geom = "raster", contour = FALSE)+
+  scale_fill_distiller(palette=4, direction=-1)+
+  coord_equal()+
+  geom_path(data = court_points,aes(x = x, y = y, group = desc),color = "black")+
+  xlim(-250,250)+ ylim(0,400)+ theme_minimal()+
+  theme(legend.position = "none")+
+  theme(axis.title.x = element_blank())+
+  theme(axis.title.y = element_blank())+
+  facet_wrap(~ typeEvent+typeShot)+
+  theme(axis.ticks = element_blank(), axis.text.y = element_blank())+
+  theme(axis.ticks = element_blank(), axis.text.x = element_blank())+
+  labs(title = "LeBron James's Density Shot Chart")
+
+ggplot(Lakers,aes(x=locationX,y=locationY+45))+
+  stat_density_2d(aes(fill = ..density..), geom = "raster", contour = FALSE)+
+  scale_fill_distiller(palette=4, direction=-1)+
+  coord_equal()+
+  geom_path(data = court_points,aes(x = x, y = y, group = desc),color = "black")+
+  xlim(-250,250)+ ylim(0,400)+ theme_minimal()+
+  theme(legend.position = "none")+
+  theme(axis.title.x = element_blank())+
+  theme(axis.title.y = element_blank())+
+  facet_wrap(~ typeEvent+typeShot)+
+  theme(axis.ticks = element_blank(), axis.text.y = element_blank())+
+  theme(axis.ticks = element_blank(), axis.text.x = element_blank())+
+  labs(title = "Lakers' Density Shot Chart")
+```
+From the charts above, LeBron is most efficient from the mid-range on his right side and from straight down the middle for his 3-pointers. He misses the most from beyond the arc, so we will want to emphasize that. Because LeBron is so great at getting to the basket, either scoring or dishing out to open 3-point shooters, we are going to go under all on-ball pick-and-rolls to give the defender a better chance in stopping penetration, which will give LeBron open 3's, that we are going to have to hope he does not hit. When LeBron is posting up on the right side of the floor, we are going to send an immediate double, ideally from the opposite wing, because the Laker's shot chart shows that is a weak shot from them, or from the same side wing. When Lebron posts up on the left side, we are going to send the double once he dribbles the ball twice because after two dribbles, there is a good possibility he is going to the basket and we need as many bodies in the paint/on LeBron to make that shot as hard as possible. The reason why we aren't sending the double immediately is because the shot chart shows, he isn't as efficient from that side of the floor, and with all-time great players, you have to give up something. One big no-no for guarding the Laker's is not allowing corner three point shots, so that is the absolute last place we are going to send help from.
+
+
+
+The plan to defend the Golden State Warriors is completely different than the approach that we took with the Lakers. The Warriors have much more of a team-orientated offensive philosophy, where most of their shots come off of off-ball action unlike with the Lakers, where there offense is predicated off of on-ball screens and isolations for LeBron. Most of the Warriors scoring is going to come from their three-headed dragon of Steph Curry, Kevin Durant, and Klay Thompson. They compliment this explosive offensive firepower with good decision makers, Draymond Green, Andre Igoudala, Shaun Livingston, and solid bigs like Kevon Looney and Jonas Jerebko. The Warriors offense is so potent that either Steph Curry, Kevin Durant, or Klay Thompson could be your defenses main focus for the night, but I believe the best way to slow down the Warriors, is to minimize Steph Curry.
+
+```{r Warriors}
+ggplot(Warriors,aes(x=locationX,y=locationY+45))+
+  stat_density_2d(aes(fill = ..density..), geom = "raster", contour = FALSE)+
+  scale_fill_distiller(palette=4, direction=-1)+
+  coord_equal()+
+  geom_path(data = court_points,aes(x = x, y = y, group = desc),color = "black")+
+  xlim(-250,250)+ ylim(0,400)+ theme_minimal()+
+  theme(legend.position = "none")+
+  theme(axis.title.x = element_blank())+
+  theme(axis.title.y = element_blank())+
+  facet_wrap(~ typeEvent+typeShot)+
+  theme(axis.ticks = element_blank(), axis.text.y = element_blank())+
+  theme(axis.ticks = element_blank(), axis.text.x = element_blank())+
+  labs(title = "Warriors' Density Shot Chart")
+
+ggplot(Steph,aes(x=locationX,y=locationY+45))+
+  stat_density_2d(aes(fill = ..density..), geom = "raster", contour = FALSE)+
+  scale_fill_distiller(palette=4, direction=-1)+
+  coord_equal()+
+  geom_path(data = court_points,aes(x = x, y = y, group = desc),color = "black")+
+  xlim(-250,250)+ ylim(0,400)+ theme_minimal()+
+  theme(legend.position = "none")+
+  theme(axis.title.x = element_blank())+
+  theme(axis.title.y = element_blank())+
+  facet_wrap(~ typeEvent+typeShot)+
+  theme(axis.ticks = element_blank(), axis.text.y = element_blank())+
+  theme(axis.ticks = element_blank(), axis.text.x = element_blank())+
+  labs(title = "Stephen Curry's Density Shot Chart")
+```
+When looking at the Warriors and Steph's shot charts, I had 3 major takeaways:
+1) The Warriors are a much better three point shooting team than the Lakers
+2) They miss a lot of shots from inside the free throw line and the 3-point shot from the right-wing
+3) Conversely, Steph favors the right-wing three over the left and prefers the left-wing mid-range shot
+
+Knowing all this, my strategy would be to run Durant,  Thompson, and Steph off of the 3-point arc and let the rest of the team fire away. This is a great example of where the shot charts can lead you astray because it is clear that Steph doesn't shoot the ball as well from the left-wing as the right, but just because he struggles more from that area, he's still better than most of the league from that spot. Steph is also the only Warriors player that receives consistent on-ball screens, so when he does, I would immediately trap him unless Kevin Durant is the screener, in which I would hard-hedge, go over the screen, and send help from the strong side corner until the defender could recover back to Kevin Durant. We want the ball out of Steph's hands, not giving him any space to launch a three, and this on-ball screen tactic will do that, while not giving Durant wide-open 3's. It is imperative to not let those three guys get it going from beyond the arc and you want them to have to dribble and make shots off the bounce as much as possible.
+
+```{r Rockets}
+ggplot(Rockets,aes(x=locationX,y=locationY+45))+
+  stat_density_2d(aes(fill = ..density..), geom = "raster", contour = FALSE)+
+  scale_fill_distiller(palette=4, direction=-1)+
+  coord_equal()+
+  geom_path(data = court_points,aes(x = x, y = y, group = desc),color = "black")+
+  xlim(-250,250)+ ylim(0,400)+ theme_minimal()+
+  theme(legend.position = "none")+
+  theme(axis.title.x = element_blank())+
+  theme(axis.title.y = element_blank())+
+  facet_wrap(~ typeEvent+typeShot)+
+  theme(axis.ticks = element_blank(), axis.text.y = element_blank())+
+  theme(axis.ticks = element_blank(), axis.text.x = element_blank())+
+  labs(title = "Houston Rocket Density Shot Chart")
+
+ggplot(Harden,aes(x=locationX,y=locationY+45))+
+  stat_density_2d(aes(fill = ..density..), geom = "raster", contour = FALSE)+
+  scale_fill_distiller(palette=4, direction=-1)+
+  coord_equal()+
+  geom_path(data = court_points,aes(x = x, y = y, group = desc),color = "black")+
+  xlim(-250,250)+ ylim(0,400)+ theme_minimal()+
+  theme(legend.position = "none")+
+  theme(axis.title.x = element_blank())+
+  theme(axis.title.y = element_blank())+
+  facet_wrap(~ typeEvent+typeShot)+
+  theme(axis.ticks = element_blank(), axis.text.y = element_blank())+
+  theme(axis.ticks = element_blank(), axis.text.x = element_blank())+
+  labs(title = "James Harden's Density Shot Chart")
+```
+
+The Houston Rockets had a very distinct analytically driven offensive identity, emphasizing spacing of the court which leads to 3-pointers, layups/dunks/floaters, and free throws and this is evident by the Rockets and Harden's shot charts above. Their offense is sort of a blend of the Warriors and the Lakers because they are looking to take a lot of 3's but they create these shots with pick and rolls with Harden and Chris Paul handling the ball and Clint Capela setting the screens and rolling to the rim. The Rockets surround these two with 3 and D guys like Trevor Ariza, PJ Tucker, Eric Gordon, and Austin Rivers. With all of these guys, I want to run them off of the 3-point line when they are catching the ball in the corners, forcing them to put the ball on the floor and make a decision. We are going to run these guys off of the 3-point arc as much as possible because they will not take mid-range jumpshots, evident by the shot charts, and if they do, that is a shot I am willing to give up due to the lack of attempts. 
+
+The best way to stop Houston is to keep Harden out of the paint. Harden is phenomenal at reading the defense and making the correct decision when he is going downhill at the basket. If you help off of 3-point shooters, he will find them, if the big leaves Capela to stop his drive, he will throw the lob to him, and if you do not step up and stop him from the basket, he will go to the rim either finishing the easy bucket or draw a foul. The biggest hole that I see in Harden's game, is his inconsistent 3-point shooting and his willingness to settle for contested, step-backs jumpshots, so that is what we will give him. I would start the game by switching all on-ball screens with Harden and Capela, and tell the big man that switches onto him "give up the 3 but do not give up a lane to the basket". If Harden starts to punish us from deep, I would employ the defense that most other teams do, which is to just double him everytime he steps within 30 ft of the hoop and force the ball out of his hands. With exception to CP3, who was hurt for a good portion of the year, the rest of the team is not great at creating their own shots or shots for others and Harden showed a tendency to float around ten feet past the 3-point arc, rendering him practically useless.
+
+
+```{r Blazers}
+ggplot(Blazers,aes(x=locationX,y=locationY+45))+
+  stat_density_2d(aes(fill = ..density..), geom = "raster", contour = FALSE)+
+  scale_fill_distiller(palette=4, direction=-1)+
+  coord_equal()+
+  geom_path(data = court_points,aes(x = x, y = y, group = desc),color = "black")+
+  xlim(-250,250)+ ylim(0,400)+ theme_minimal()+
+  theme(legend.position = "none")+
+  theme(axis.title.x = element_blank())+
+  theme(axis.title.y = element_blank())+
+facet_wrap(~ typeEvent+typeShot)+
+  theme(axis.ticks = element_blank(), axis.text.y = element_blank())+
+  theme(axis.ticks = element_blank(), axis.text.x = element_blank())+
+  labs(title = "Portland Trail Blazers Density Shot Chart")
+
+ggplot(Dame,aes(x=locationX,y=locationY+45))+
+  stat_density_2d(aes(fill = ..density..), geom = "raster", contour = FALSE)+
+  scale_fill_distiller(palette=4, direction=-1)+
+  coord_equal()+
+  geom_path(data = court_points,aes(x = x, y = y, group = desc),color = "black")+
+  xlim(-250,250)+ ylim(0,400)+ theme_minimal()+
+  theme(legend.position = "none")+
+ theme(axis.title.x = element_blank())+
+  theme(axis.title.y = element_blank())+
+  facet_wrap(~ typeEvent+typeShot)+
+  theme(axis.ticks = element_blank(), axis.text.y = element_blank())+
+  theme(axis.ticks = element_blank(), axis.text.x = element_blank())+
+  labs(title = "Damian Lillard's Density Shot Chart")
+```
+
+The Portland Trail Blazers offense is very perimeter oriented, and consists mainly of pick and rolls or dribble handoffs with Damian Lillard and Jusuf Nurkic or off-ball action, freeing up CJ McCollum for catch and shoot or catch and go opportunities. They surround this core with a good shooters in Rodney Hood and Seth Curry, elite wing defenders but shaky shooters in Al-Farouq Amino and Evan Turner, and stretch bigs like Meyers Leonard and Zach Collins. Unlike the Rockets, the Blazers do not shoot a lot of corner 3's because most of their action comes off of these pick and roll or pick and pop action. When Dame comes off of these picks, he is usually going to do 1 of 3 things: you go under the screen and he will shoot the 3 without hesitation with no regard for how deep he is, you go over the screen and don't hedge with the big and he will go straight to the cup, or you go over the screen, big man either hedges or doubles, and he finds Nurkic for the mid-range shot or hits Collins or Leonard for the 3, just depends on who is in the game screening for Lilliard.
+
+When looking at Dame's shot chart, it is clear he favors shooting going to his right over his left. I would scheme my defense accordingly, instructing the on-ball defender to always go over screens, not allowing him open 3's, but when the screen is set on the right side, the big defending the screener should hard hedge, not giving Dame a look at the basket and force him to swing to the big man screening (Nurkic,Collins,Leonard) and force them to beat me on perimeter jump shots. If the screen is going to the left, I again want the on-ball defender to go over the screen, but the big defending the screener should soft hedge. I am willing to give up this shot to Dame because the shot chart shows that he's not very efficient of a shooter from that area.
