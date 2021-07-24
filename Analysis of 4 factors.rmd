@@ -1,0 +1,100 @@
+---
+output:
+  word_document: default
+  html_document: default
+---
+# MOD 3 Assignment 1 - Four Factors
+## Keith Swartz
+
+```{r include=FALSE}
+library(readr)
+library(tidyverse)
+library(ggcorrplot)
+library(GGally)
+library(gridExtra)
+BasketballRefFourFactors <- read_csv("BasketballRefFourFactors.csv")
+```
+
+Task 1
+
+```{r}
+BasketballRefFourFactors <- na.omit(BasketballRefFourFactors)
+```
+
+The data set that I will be exploring contains 28 key performance metrics for all 30 NBA teams during the 2018/2019.
+
+Task 2
+```{r}
+corr = round(cor(BasketballRefFourFactors[,18:25]), 2) #Note the ,1:11 code to select the columns for inclusion
+ggcorrplot(corr, hc.order = TRUE, type = "lower",
+   lab = TRUE)
+```
+
+After looking at the correlation of all 8 factors, I agree that there is no strong correlation between any of the variables. The only relationship that makes sense basketball-wise and has over 50% correlation is defensive rebound % when compared to defensive field goal %. I would want to plot these two variables against each other to see which specific teams closely follow this trend because teams that are good at defensive rebounding and/or defense are taller and longer teams.
+
+Task 3
+```{r}
+BBall1 <- select(BasketballRefFourFactors, W, MOV, OeFGPct, OTOVPct, ORBPct, `OFT/FGA`, DeFGPct, DTOVPct, DRBPct,`DFT/FGA`)
+ggcorr(BBall1, label = "TRUE", label_round = 2)
+
+```
+
+The only factor (2 variables, offense and defense) that have a strong correlation with both wins and average margin of victory is effective field goal %. This makes a lot of sense because the name of the game is putting the ball in the basket, and if your team is very efficient at scoring and makes it difficult for the opposing team to score, you should win and win by a lot more times than not.
+
+Task 4
+
+```{r}
+p1=ggplot(BasketballRefFourFactors,aes(x=W,y=OeFGPct))+
+  geom_point()+
+  geom_smooth()
+
+p2=ggplot(BasketballRefFourFactors,aes(x=W,y=OTOVPct))+
+  geom_point()+
+  geom_smooth()
+
+p3=ggplot(BasketballRefFourFactors,aes(x=W,y=ORBPct))+
+  geom_point()+
+  geom_smooth()
+
+p4=ggplot(BasketballRefFourFactors,aes(x=W,y=`OFT/FGA`))+
+  geom_point()+
+  geom_smooth()
+
+grid.arrange(p1,p2,p3,p4)
+```
+
+Looking at the offensive factors, it is clear that the only plot that has any real resembelence of correlation to wins is offensive effective field goal percentage. This correlation is positive, meaning the better a team shoots, the more wins a team will have.
+
+```{r}
+p5=ggplot(BasketballRefFourFactors,aes(x=W,y=DeFGPct))+
+  geom_point()+
+  geom_smooth()
+
+p6=ggplot(BasketballRefFourFactors,aes(x=W,y=DTOVPct))+
+  geom_point()+
+  geom_smooth()
+
+p7=ggplot(BasketballRefFourFactors,aes(x=W,y=DRBPct))+
+  geom_point()+
+  geom_smooth()
+
+p8=ggplot(BasketballRefFourFactors,aes(x=W,y=`DFT/FGA`))+
+  geom_point()+
+  geom_smooth()
+
+grid.arrange(p5,p6,p7,p8)
+```
+
+Looking at the defensive factors, the only factor that correlates to wins is defensive effective field goal percentage. Unlike the offensive correation, these factors are negatively correlated, meaning that the lower effective field goal % the opponent shoots, the more wins a team should expect and vis versa.
+
+Task 5
+```{r}
+model1 =lm(W~OeFGPct+OTOVPct+ORBPct+`OFT/FGA`+DeFGPct+DTOVPct+DRBPct+`DFT/FGA`,BasketballRefFourFactors)
+summary(model1)
+```
+
+When looking at the slopes for each of the eight variables, we can first determine that defensive free throw % is the only irrelevant variable when predicting wins due to an extremely high p-value of .91. This is very understandable because there is no way of defending a free throw. Next, I want to look at the slopes of all the variables. All of the offensive factors slopes are positive with exception to turnover %. This makes sense because the better your team shoots (from the field and free throw line) and rebounds, the better a team plays.Offensive turnovers % has a negative slope because it is beneficial to give the ball to the other team. For the defensive metrics, opponents effective field goal % is negative because you want the other team to shoot poorly from the field, defensive turnover % is positive because you want to take away as many potential opportunities from the other team, and defensive rebound % is positive because you want to limit the other team to only one shot at the basket per possession. Lastly, I determined this model to be very accurate with a adjusted r-squared of .94 meaning the model does a fantastic job of describing the variance in wins.
+
+Task 6
+
+When exclusively looking at the NBA, I would agree with Dean Oliver's Four Factors concept and would maybe even take more emphasis off of free throw rate and add it to effective shooting % because of the lack of significance in defensive free throw rate. I would love to be able to look at this same data for college and high school basketball because I believe that there would be a much bigger emphasis on turnover rate. When players that are tasked with handling the basketball make it to the NBA, they are so talented that you rarely see teams press in the backcourt because they easily can break the press, usually resulting in an easy basket on the other end. But, in college and especially high school basketball, teams employ backcourt pressure that can cause less confident ball-handlers to turnover the ball and give up very easy baskets.
